@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live TV | Sports</title>
+    <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #0f5faf, #000000);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+       
+        .container {
+            width: 95%;
+            max-width: 800px;
+            padding: 15px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 26px;
+            color: #1E90FF;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .tv-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .tv-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .iframe-container {
+            position: absolute;
+            top: 5%;
+            left: 4%;
+            width: 92%;
+            height: 82%;
+            overflow: hidden;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .iframe-btn {
+            padding: 10px 15px;
+            background-color: #1E90FF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+        }
+        .iframe-btn:hover {
+            background-color: #0f75c2;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            margin-top: 20px;
+            color: #ccc;
+        }
+        @media (max-width: 600px) {
+            .iframe-btn {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Live Sports Streaming</h1>
+        </div>
+        <div class="tv-container">
+            <img src="https://static.vecteezy.com/system/resources/thumbnails/055/554/965/small/tv-screen-background-modern-led-lcd-panel-wide-computer-monitor-display-mockup-blank-flatscreen-television-template-illustration-horizon-plasma-tv-monitor-hanging-wall-new-technology-electronic-png.png" alt="TV Screen">
+            <div class="iframe-container">
+                <iframe id="match-iframe" src="http://jagobd.run.place/videojs.html?stream=http://ktv.im:8080/live/111222/222111/83779.m3u8" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="buttons">
+            <button class="iframe-btn" onclick="changeIframeSource('prime.html')">PRIME</button>
+            <button class="iframe-btn" onclick="changeIframeSource('willow.html')">Willow</button>
+            <button class="iframe-btn" onclick="changeIframeSource('astro.html')">Astro Cricket</button>
+            <button class="iframe-btn" onclick="changeIframeSource('http://jagobd.run.place/videojs.html?stream=http://unity-gaming.net:8080/live/testforflorin/h3jR9MKh/1114.m3u8')">Willow Cricket</button>
+            <button class="iframe-btn" onclick="changeIframeSource('http://jagobd.run.place/videojs.html?stream=http://unity-gaming.net:8080/live/testforflorin/h3jR9MKh/395.m3u8')">Sky Sports Cricket</button>
+        </div>
+        <div class="footer">Live Sports Streaming &copy; 2025</div>
+    </div>
+    <script>
+        function changeIframeSource(url) {
+            document.getElementById('match-iframe').src = url;
+        }
+    </script>
+</body>
+</html>
