@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Geo Super Live</title>
+    <meta name="theme-color" content="#1e2327">
+
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta property="og:title" content="Live Sports">
+    <meta property="og:description" content="Watch Live Sports">
+    <!-- Shaka Player -->
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/shaka-player.ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/controls.min.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+   
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .shaka-video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+            aspect-ratio: 16/9;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <div data-shaka-player-container class="shaka-video-container" shaka-controls="true">
+        <video 
+            autoplay 
+            data-shaka-player 
+            id="video" 
+            class="shaka-video"
+            poster=""
+        ></video>
+    </div>
+
+    <script>
+    (function() {
+        const config = {
+            url: 'https://abgqjfuaaaaaaaamjg47xbr24jnk7.5585d58ad0ad47ec9147be5b551e6277.emt.cf.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/g7lle69upt/out/v1/e67fdb7dbb6c421d9aa016def25b6ea8/cenc.mpd', // Replace with your MPD link
+            drmConfig: {
+                keyId: '41cc604b8c232e69e850cc76fc7c5da1', // Replace with your key ID
+                key: '4c6593f619b10e9c00b446ffcb1e53af' // Replace with your ClearKey
+            },
+            type: 'DRM (ClearKey)', // Specify DRM type
+            authBearer: 'none', // If you have an authorization token, add it here
+        };
+
+        let player;
+        let ui;
+        const video = document.getElementById('video');
+        const videoContainer = document.querySelector('[data-shaka-player-container]');
+        const loading = document.getElementById('loading');
+
+        // Define isMobile function first
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function resizePlayer() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            videoContainer.style.width = width + 'px';
+            videoContainer.style.height = height + 'px';
+        }
+
+        async function initPlayer() {
+            try {
+                shaka.polyfill.installAll();
+
+                if (!shaka.Player.isBrowserSupported()) {
+                    throw new Error('Browser not supported!');
+                }
+
+                player = new shaka.Player(video);
+                window.player = player;
+
+                // Player configuration
+                player.configure({
+                    streaming: {
+                        bufferingGoal: 60,
+                        rebufferingGoal: 2,
+                        bufferBehind: 30,
+                        lowLatencyMode: true,
+                        inaccurateManifestTolerance: 3,
+                        retryParameters: {
+                            maxAttempts: 5,
+                            timeout: 10000,
+                            baseDelay: 1000,
+                            backoffFactor: 2
+                        }
+                    }
+                });
+
+                // DRM Configuration (ClearKey)
+                if (config.type === 'DRM (ClearKey)' && config.drmConfig) {
+                    player.configure({
+                        drm: {
+                            clearKeys: {
+                                [config.drmConfig.keyId]: config.drmConfig.key
+                            },
+                            advanced: {
+                                'com.widevine.alpha': {
+                                    videoRobustness: 'SW_SECURE_CRYPTO',
+                                    audioRobustness: 'SW_SECURE_CRYPTO'
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Configure auth bearer token if present
+                if (config.authBearer && config.authBearer !== 'none') {
+                    player.getNetworkingEngine().registerRequestFilter(function(type, request) {
+                        request.headers['Authorization'] = 'Bearer ' + config.authBearer;
+                    });
+                }
+
+                // Error handling
+                player.addEventListener('error', onError);
+
+                // UI Configuration
+                ui = new shaka.ui.Overlay(player, videoContainer, video);
+                ui.configure({
+                    addBigPlayButton: true,
+                    controlPanelElements: [
+                        'time_and_duration',
+                        'mute',
+                        'volume',
+                        'rewind',    
+                        'fast_forward',
+                        'play_pause',
+                        'spacer',
+                        'quality',
+                        'picture_in_picture',
+                        'fullscreen',    
+                        'overflow_menu'
+                    ],
+                    seekBarColors: {
+                        base: 'rgba(255, 255, 255, 0.3)',
+                        buffered: 'rgba(255, 255, 255, 0.54)',
+                        played: 'rgb(255, 0, 0)',
+                    }
+                });
+
+                // Load content
+                await player.load(config.url);
+                console.log('Stream loaded successfully');
+                loading.style.display = 'none';
+
+                // Handle mobile fullscreen
+                if (isMobile()) {
+                    video.play().then(() => {
+                        if (document.documentElement.requestFullscreen) {
+                            document.documentElement.requestFullscreen();
+                        }
+                    }).catch(error => {
+                        console.warn('Autoplay failed:', error);
+                    });
+                }
+
+                // Initial resize
+                resizePlayer();
+
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        function onError(error) {
+            console.error('Player error:', error);
+            loading.style.display = 'none';
+            alert(`Playback Error: ${error.detail?.message || error.message || 'Unknown error'}`);
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', resizePlayer);
+        window.addEventListener('orientationchange', resizePlayer);
+        document.addEventListener('DOMContentLoaded', initPlayer);
+
+        // Keyboard controls
+        document.addEventListener('keydown', (event) => {
+            if (!video) return;
+
+            switch (event.key) {
+                case ' ':
+                    event.preventDefault();
+                    video.paused ? video.play() : video.pause();
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    video.volume = Math.min(video.volume + 0.1, 1);
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    video.volume = Math.max(video.volume - 0.1, 0);
+                    break;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 5);
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 5);
+                    break;
+                case 'f':
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                    break;
+                case 'm':
+                    video.muted = !video.muted;
+                    break;
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
